@@ -1,9 +1,9 @@
 # add aws account, access key and secrets here
 variable "aws_access_key" {
-default= "AKIA3Z2R5A2VIQA32AMO"
+default= ""
 }
 variable "aws_secret_key" {
-default= "yZBxEggZMPu3lG+ZuaQ8K24soxZSF0fd/dXbbKRD"
+default= ""
 }
 
 variable "aws_region" {    
@@ -11,7 +11,7 @@ variable "aws_region" {
 }
 
 variable "aws_account_id" {    
-    default = "811383719594"
+    default = ""
 }
 
 variable "domain" {
