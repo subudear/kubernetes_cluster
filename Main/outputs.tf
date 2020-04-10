@@ -10,15 +10,6 @@ output "aws_account_id" {
 	value = "${var.aws_account_id}"
 }
 
-output rds_instance_endpoint {
-	value = module.services.rds_instance_endpoint
-}
-
-output redis_elasticache_endpoint {
-	value = module.services.redis_elasticache_endpoint
-}
-
-
 output "internet_gateway_id" {
   value = module.network.internet_gateway_id
 }
