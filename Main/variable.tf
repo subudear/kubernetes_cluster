@@ -15,10 +15,10 @@ variable "aws_account_id" {
 }
 
 variable "domain" {
-	default="k8s.local"
+	default="demo.local"
 }
 variable "cluster_name" {
-default= "test.k8s.local"
+default= "test.demo.local"
 }
 
 
