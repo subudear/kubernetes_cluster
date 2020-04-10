@@ -84,8 +84,7 @@ resource "aws_route_table_association" "private" {
 resource "aws_subnet" "bastion-subnet-public" {
   count                   = length(data.aws_availability_zones.available.names)
   vpc_id                  = var.vpc_id
-  # cidr_block              = cidrsubnet(var.vpc_cidr_block, 3, parseint(var.kops_created_subnet_count, 10) + count.index)
-  cidr_block              = cidrsubnet(var.vpc_cidr_block, 4, count.index+12)
+  cidr_block              = cidrsubnet(var.vpc_cidr_block, 4, count.index+3)
   availability_zone       = local.az_names[count.index]
   map_public_ip_on_launch = true
   tags = {
@@ -133,7 +132,7 @@ resource "aws_db_subnet_group" "rds_db_subnet_group" {
 }
 
 resource "aws_db_instance" "test-config-store" {
-  identifier                      = "test-config-store-${replace(var.cluster_name, ".", "-")}"
+  identifier                      = "test-${replace(var.cluster_name, ".", "-")}"
   allocated_storage               = 10
   auto_minor_version_upgrade      = true
   backup_retention_period         = 1
@@ -176,7 +175,7 @@ resource "aws_db_instance" "test-config-store" {
 
 
 resource "aws_elasticache_subnet_group" "test-redis" {
-  name       = "test-redis-cache-subnet"
+  name       = "test-redis-subnet"
   subnet_ids = aws_subnet.kops-subnet-private.*.id
 }
 
@@ -194,7 +193,7 @@ resource "aws_security_group" "elasticache1" {
 }
 
 resource "aws_elasticache_cluster" "test-redis" {
-  cluster_id      = "test-redis-${replace(var.cluster_name, ".", "-")}"
+  cluster_id      = "test-redisdb-${replace(var.cluster_name, ".", "-")}"
   engine          = "redis"
   node_type       = "cache.t3.medium"
   num_cache_nodes = 1
