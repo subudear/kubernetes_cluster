@@ -8,8 +8,6 @@ variable vpc_id {}
 
 variable "vpc_cidr_block" {}
 
-variable rds_password {}
-
 variable kops_state_bucket_name {}
 
 variable environment {}
@@ -21,8 +19,6 @@ variable "cluster_name" {}
 variable internet_gateway_id {}
 
 variable aws_account_id {}
-
-variable "es_domain" {}
 
 
 
@@ -123,153 +119,6 @@ resource "aws_route" "internet_route" {
   
 }
 
-resource "aws_db_subnet_group" "rds_db_subnet_group" {
-  name       = "rds_db_subnet_group.${var.cluster_name}"
-  subnet_ids = aws_subnet.kops-subnet-private.*.id
-  tags = {
-    Name = "rds_db_subnet_group.${var.cluster_name}"
-  }
-}
-
-resource "aws_db_instance" "test-config-store" {
-  identifier                      = "test-${replace(var.cluster_name, ".", "-")}"
-  allocated_storage               = 10
-  auto_minor_version_upgrade      = true
-  backup_retention_period         = 1
-  backup_window                   = "03:30-04:00"
-  copy_tags_to_snapshot           = false
-  db_subnet_group_name            = aws_db_subnet_group.rds_db_subnet_group.name
-  deletion_protection             = false
-  enabled_cloudwatch_logs_exports = []
-  engine                          = "postgres"
-  iam_database_authentication_enabled   = false
-  instance_class                        = "db.t3.medium"
-  iops                                  = 0
-  license_model                         = "postgresql-license"
-  maintenance_window                    = "sat:06:04-sat:06:34"
-  max_allocated_storage                 = 0
-  monitoring_interval                   = 0
-  multi_az                              = true
-  name                                  = "postgres"
-  option_group_name                     = "default:postgres-11"
-  parameter_group_name                  = "default.postgres11"
-  performance_insights_enabled          = false
-  performance_insights_retention_period = 0
-  port                                  = 5432
-  publicly_accessible                   = false
-  security_group_names                  = []
-  skip_final_snapshot                   = true
-  storage_encrypted                     = false
-  storage_type                          = "standard"
-  tags = {
-    "Environment" = "test"
-    "Product"     = "test-ClusterConfig"
-  }
-  username = "uAdmin"
-  password = var.rds_password
-  timeouts {}
-}
-
-
-# ElastiCache Assets - Redis
-
-
-resource "aws_elasticache_subnet_group" "test-redis" {
-  name       = "test-redis-subnet"
-  subnet_ids = aws_subnet.kops-subnet-private.*.id
-}
-
-resource "aws_security_group" "elasticache1" {
-  name        = "security-group"
-  description = "Managed by Terraform"
-  vpc_id      = var.vpc_id
-
-  ingress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = [var.vpc_cidr_block]
-  }
-}
-
-resource "aws_elasticache_cluster" "test-redis" {
-  cluster_id      = "test-redisdb-${replace(var.cluster_name, ".", "-")}"
-  engine          = "redis"
-  node_type       = "cache.t3.medium"
-  num_cache_nodes = 1
-  port            = 6379
-  # transit_encryption_enabled = true
-  subnet_group_name = aws_elasticache_subnet_group.test-redis.name
-  depends_on        = [aws_elasticache_subnet_group.test-redis]
-} 
-
-
-# Elastic Search Assets
-
- resource "aws_security_group" "es" {
-   name        = "elasticsearch-${var.domain}"
-   description = "Managed by Terraform"
-   vpc_id      = var.vpc_id
-
-   ingress {
-     from_port   = 443
-     to_port     = 443
-     protocol    = "tcp"
-     cidr_blocks = [var.vpc_cidr_block]
-   }
- }
-
-
-
- resource "aws_elasticsearch_domain" "es" {
-   domain_name           = var.es_domain
-   cluster_config {
-     instance_type = "t2.small.elasticsearch"
-     instance_count= 2
-     zone_awareness_enabled = true # need this to have > 1 subnet
-   }
-
-   ebs_options {
-     ebs_enabled = true
-     volume_size = 20
-   }
-
-
-   vpc_options {
-     subnet_ids = aws_subnet.kops-subnet-private.*.id
-     security_group_ids = [aws_security_group.es.id]
-   }
-
-   advanced_options = {
-     "rest.action.multi.allow_explicit_index" = "true"
-   }
-
-   access_policies = <<CONFIG
- {
-     "Version": "2012-10-17",
-     "Statement": [
-         {
-             "Action": "es:*",
-             "Principal": "*",
-             "Effect": "Allow",
-             "Resource": "arn:aws:es:${var.aws_region}:${data.aws_caller_identity.current.account_id}:domain/${var.es_domain}/*"
-         }
-     ]
- }
- CONFIG
-
-   snapshot_options {
-     automated_snapshot_start_hour = 23
-   }
-
-   tags = {
-     Domain = var.es_domain
-   }
-
-
- }
-
-
 
 # S3 bucket to store kops state.
 
@@ -314,22 +163,6 @@ resource "aws_nat_gateway" "ngw" {
 
 
 ####################OUTPUTS####################
-/*
-output ElasticSearch_Endpoint {
-  value = aws_elasticsearch_domain.es.endpoint
-}
-
-output ElasticSearch_Kibana_Endpoint {
-  value = aws_elasticsearch_domain.es.kibana_endpoint
-}
-*/
-output rds_instance_endpoint {
-	value = aws_db_instance.test-config-store.endpoint
-}
-
-output redis_elasticache_endpoint {
-	value = aws_elasticache_cluster.test-redis.cache_nodes
-}
 
 output  availability_zone_names {
   value = data.aws_availability_zones.available.names
@@ -373,7 +206,3 @@ value = aws_route_table.private_kops.*.id
 output kops_s3_bucket {
   value = aws_s3_bucket.kops_state.bucket
 }
-
-
-
-
