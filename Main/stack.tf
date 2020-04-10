@@ -37,7 +37,7 @@ module "services" {
   aws_region                = var.aws_region
   es_domain					= var.es_domain
   domain                    = var.domain
-  kops_state_bucket_name = "${var.environment}-kops-state"
+  kops_state_bucket_name = "${var.environment}-kops-store"
   environment	= var.environment
   internet_gateway_id = module.network.internet_gateway_id
   aws_account_id            = var.aws_account_id
