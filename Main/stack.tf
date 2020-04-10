@@ -29,13 +29,11 @@ module "network" {
 module "services" {
   source                    = "../modules/services/"
   cluster_name              = var.cluster_name
-  rds_password              = var.rds_password
   vpc_cidr_block           = var.vpc_cidr_block
   vpc_id                    = module.network.vpc_id
   aws_access_key            = var.aws_access_key
   aws_secret_key            = var.aws_secret_key
   aws_region                = var.aws_region
-  es_domain					= var.es_domain
   domain                    = var.domain
   kops_state_bucket_name = "${var.environment}-kops-store"
   environment	= var.environment
