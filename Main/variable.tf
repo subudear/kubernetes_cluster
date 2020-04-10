@@ -22,18 +22,11 @@ default= "test.k8s.local"
 }
 
 
-variable "rds_password" {
-default="dfreegt43423fv"
-}
-
 variable "environment" {
 default="test"
 }
 
-variable "es_domain" {
-  description = "ElasticSearch domain name"
-  default="es-test-k8s-local"
-}
+
 
 # VPC_cidr_block 
 variable "vpc_cidr_block" {
